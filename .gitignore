@@ -1,0 +1,27 @@
+# CMake build directories
+/build/
+/out/
+/cmake-build-*/
+
+# Common build artifacts
+*.o
+*.obj
+*.lo
+*.la
+*.so
+*.a
+*.lib
+*.dll
+*.exe
+*.bin
+
+# IDE-specific files (e.g., CLion)
+.idea/
+*.iml
+
+# Other common temporary files
+*~
+*.bak
+*.swp
+*.swo
+*.tmp
