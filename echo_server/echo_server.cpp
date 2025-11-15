@@ -1,6 +1,7 @@
 #include <iostream>
+#include "server.h"
 int main()
 {
-    std::cout << "hello world!" << std::endl;
+    auto echoServer = EchoSocket(120, 7, 0);
     return 0; 
 }
