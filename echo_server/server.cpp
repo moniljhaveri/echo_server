@@ -17,8 +17,6 @@ EchoSocket::EchoSocket(int ip_address, int type, int protocol)
         std::cout << "Failed to create socket" << std::endl;
         return;
     }
-    // recv(clientSocket, buffer, sizeof(buffer), 0);
-    // std::cout << "message from client " << buffer << std::endl;
 }
 void EchoSocket::run() 
 {
@@ -39,13 +37,19 @@ void EchoSocket::run()
         inet_ntop(AF_INET, &ipAddr, clientIp, INET_ADDRSTRLEN);
         if(clientSocket < 0) continue;
         std::cout << "Client connected from IP: " << clientIp << ", Port: " << pv4Addr->sin_port << std::endl;
+        handleClient(clientSocket);
     }
 
-    char buffer[1024] = {0};
 
 }
 void EchoSocket::handleClient(int clientSocket)
 {
+
+    char buffer[1024] = {0};
+    ssize_t bytes_read = read(clientSocket, buffer, sizeof(buffer));
+    std::cout << buffer << std::endl;
+    send(clientSocket, buffer, sizeof(buffer), 0);
+
 
 }
 EchoSocket::~EchoSocket()
