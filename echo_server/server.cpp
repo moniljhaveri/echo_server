@@ -1,5 +1,6 @@
 #include "server.h"
 #include <arpa/inet.h> // For inet_ntoa
+#include <thread>
 
 
 EchoSocket::EchoSocket(int ip_address, int type, int protocol)
@@ -37,7 +38,8 @@ void EchoSocket::run()
         inet_ntop(AF_INET, &ipAddr, clientIp, INET_ADDRSTRLEN);
         if(clientSocket < 0) continue;
         std::cout << "Client connected from IP: " << clientIp << ", Port: " << pv4Addr->sin_port << std::endl;
-        handleClient(clientSocket);
+        std::thread clientThread(&EchoSocket::handleClient, this, std::ref(clientSocket));
+        clientThread.detach(); 
     }
 
 
@@ -45,15 +47,19 @@ void EchoSocket::run()
 void EchoSocket::handleClient(int clientSocket)
 {
 
-    char buffer[1024] = {0};
-    ssize_t bytes_read = read(clientSocket, buffer, sizeof(buffer));
-    std::cout << buffer << std::endl;
-    send(clientSocket, buffer, sizeof(buffer), 0);
+    while(true)
+    {
+        char buffer[1024] = {0};
+        ssize_t bytes_read = read(clientSocket, buffer, sizeof(buffer));
+        std::cout << buffer << std::endl;
+        send(clientSocket, buffer, sizeof(buffer), 0);
+    }
 
 
 }
 EchoSocket::~EchoSocket()
 {
     close(listenerSocket_);
+
     std::cout << "Client disconnected" << std::endl; 
 }
