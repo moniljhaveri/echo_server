@@ -54,8 +54,14 @@ void EchoSocket::handleClient(int clientSocket)
     {
         char buffer[1024] = {0};
         ssize_t bytes_read = read(clientSocket, buffer, sizeof(buffer));
+        if(bytes_read == 0)
+        {
+            std::cout << "Client Disconnected" << std::endl;
+            return; 
+        }
         std::cout << buffer << std::endl;
         send(clientSocket, buffer, sizeof(buffer), 0);
+
     }
 
 
