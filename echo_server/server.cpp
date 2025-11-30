@@ -3,7 +3,7 @@
 #include <thread>
 
 
-EchoSocket::EchoSocket(int ip_address, int type, int protocol)
+EchoSocket::EchoSocket(int ip_address, int type, int protocol) : started(false)
 {
     ip_address_ = ip_address; 
     type_ = type; 
@@ -19,16 +19,15 @@ EchoSocket::EchoSocket(int ip_address, int type, int protocol)
         return;
     }
 }
-void EchoSocket::run() 
+void EchoSocket::startListener()
 {
-
     bind(listenerSocket_, (struct sockaddr*)&socketAddress_, sizeof(socketAddress_));
     listen(listenerSocket_, 5);
     std::cout << "Listener Socket created successfully" << std::endl;
+    started = true;
 
-    while(true)
+    while(started)
     {
-
         struct sockaddr_in clientAddress; 
         socklen_t clientAddrLen;
         int clientSocket = accept(listenerSocket_, (struct sockaddr*)&clientAddress, &clientAddrLen);
@@ -39,15 +38,19 @@ void EchoSocket::run()
         if(clientSocket < 0) continue;
         std::cout << "Client connected from IP: " << clientIp << ", Port: " << pv4Addr->sin_port << std::endl;
         std::thread clientThread(&EchoSocket::handleClient, this, std::ref(clientSocket));
-        clientThread.detach(); 
+        threadVector.push_back(std::move(clientThread));
+        threadVector.back().detach(); 
     }
-
-
+}
+void EchoSocket::run() 
+{
+    std::thread thread(&EchoSocket::startListener, this);
+    listenerThread = std::move(thread);
 }
 void EchoSocket::handleClient(int clientSocket)
 {
 
-    while(true)
+    while(started)
     {
         char buffer[1024] = {0};
         ssize_t bytes_read = read(clientSocket, buffer, sizeof(buffer));
@@ -57,9 +60,22 @@ void EchoSocket::handleClient(int clientSocket)
 
 
 }
+void EchoSocket::exit()
+{
+    started = false;
+    for(auto& thread : threadVector)
+    {
+        if(thread.joinable()) thread.join();
+    }
+
+}
 EchoSocket::~EchoSocket()
 {
     close(listenerSocket_);
+    for(auto& thread : threadVector)
+    {
+        if(thread.joinable()) thread.join();
+    }
 
     std::cout << "Client disconnected" << std::endl; 
 }
